@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mc 626 - Abrir Puerta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #111;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* PANTALLA DE LOGIN */
+        #login-screen {
+            background: #1e1e1e;
+            border-radius: 32px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+        }
+        #login-screen .lock { font-size: 3rem; margin-bottom: 16px; }
+        #login-screen h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+        #login-screen p { font-size: 0.85rem; color: #555; margin-bottom: 24px; }
+        #pass-input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            background: #161616;
+            color: #fff;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 14px;
+            outline: none;
+        }
+        #pass-input:focus { border-color: #32CD32; }
+        #btn-login {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: #32CD32;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #btn-login:active { transform: scale(0.97); }
+        .error-msg {
+            color: #fca5a5;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* PANEL PRINCIPAL */
+        #main-screen { display: none; width: 100%; max-width: 360px; }
+        .card {
+            background: #1e1e1e;
+            border-radius: 32px;
+            padding: 40px 36px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+        }
+        .icono { font-size: 4rem; margin-bottom: 10px; transition: filter 0.4s; }
+        .icono.activo { filter: drop-shadow(0 0 20px #32CD32); }
+        h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; color: #fff; }
+        .subtitulo { font-size: 0.85rem; color: #555; margin-bottom: 6px; }
+        .ip-tag { font-size: 0.72rem; color: #444; font-family: monospace; margin-bottom: 28px; display: block; }
+        .estado-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            transition: all 0.3s;
+        }
+        .estado-badge.inactivo { background: #2a2a2a; color: #666; }
+        .estado-badge.activo { background: #32CD32; color: #000; }
+        .estado-badge.error { background: #ef4444; color: #fff; }
+        .timer-wrap { display: none; justify-content: center; align-items: center; margin-bottom: 20px; }
+        .timer-wrap.visible { display: flex; }
+        .timer-circle {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: #32CD32;
+            color: #000;
+            font-size: 1.3rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulso 1s infinite;
+        }
+        @keyframes pulso { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .btn-accion {
+            width: 100%;
+            padding: 18px;
+            border-radius: 20px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #32CD32;
+            color: #000;
+        }
+        .btn-accion:active { transform: scale(0.97); }
+        .btn-accion:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-accion.ocupado { background: #2a2a2a; color: #666; }
+        .log {
+            margin-top: 24px;
+            background: #161616;
+            border-radius: 16px;
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.75rem;
+            font-family: monospace;
+            color: #555;
+            min-height: 60px;
+            max-height: 130px;
+            overflow-y: auto;
+            border: 1px solid #2a2a2a;
+        }
+        .log-line { margin-bottom: 4px; line-height: 1.5; }
+        .log-line.ok   { color: #86efac; }
+        .log-line.err  { color: #fca5a5; }
+        .log-line.info { color: #93c5fd; }
+        .spinner-inline {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen">
+        <div class="lock">🔒</div>
+        <h2>Melin Joyeros</h2>
+        <p>Ingresa la contraseña para continuar</p>
+        <input type="password" id="pass-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') verificar()">
+        <button id="btn-login" onclick="verificar()">Entrar</button>
+        <p class="error-msg" id="error-msg">❌ Contraseña incorrecta</p>
+    </div>
+
+    <!-- PANEL PRINCIPAL -->
+    <div id="main-screen">
+        <div class="card">
+            <div class="icono" id="icono">🚪</div>
+            <h1>Mc 626</h1>
+            <p class="subtitulo">Abrir Puerta</p>
+            <span class="ip-tag">e8db84acdc4c — Shelly Cloud</span>
+            <div class="estado-badge inactivo" id="badge">● En espera</div>
+            <div class="timer-wrap" id="timer-wrap">
+                <div class="timer-circle" id="timer-num">3</div>
+            </div>
+            <button class="btn-accion" id="btn" onclick="abrirPuerta()">
+                🚪 Abrir Puerta
+            </button>
+            <div class="log" id="log">
+                <div class="log-line info">▸ Acceso concedido. Listo.</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const PASSWORD  = "volovan";
+    const SERVER    = "https://shelly-29-eu.shelly.cloud";
+    const AUTH_KEY  = "N2NjYjZ1aWQ248EF3F5AB2D6D59C82574560A92572942C106E3AABA251C161B7E011FD902C25F433E0C78BEB22D";
+    const DEVICE_ID = "e8db84acdc4c";
+    const SEGUNDOS  = 3;
+
+    function verificar() {
+        const input = document.getElementById('pass-input').value;
+        const errorMsg = document.getElementById('error-msg');
+        if (input === PASSWORD) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+        } else {
+            errorMsg.style.display = 'block';
+            document.getElementById('pass-input').value = '';
+            setTimeout(() => errorMsg.style.display = 'none', 2500);
+        }
+    }
+
+    const btn       = document.getElementById('btn');
+    const badge     = document.getElementById('badge');
+    const icono     = document.getElementById('icono');
+    const timerWrap = document.getElementById('timer-wrap');
+    const timerNum  = document.getElementById('timer-num');
+    const log       = document.getElementById('log');
+
+    let ocupado  = false;
+    let interval = null;
+
+    function agregarLog(texto, tipo = 'info') {
+        const linea = document.createElement('div');
+        linea.className = `log-line ${tipo}`;
+        const hora = new Date().toLocaleTimeString('es-MX');
+        linea.textContent = `[${hora}] ${texto}`;
+        log.appendChild(linea);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function feedback() {
+        if ("vibrate" in navigator) navigator.vibrate(60);
+    }
+
+    async function llamarShelly(accion) {
+        const url = `${SERVER}/device/relay/control`;
+        const body = new URLSearchParams({
+            auth_key: AUTH_KEY,
+            id: DEVICE_ID,
+            channel: 0,
+            turn: accion
+        });
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString()
+        });
+        const data = await res.json();
+        return data;
+    }
+
+    async function abrirPuerta() {
+        if (ocupado) return;
+        ocupado = true;
+        feedback();
+
+        btn.disabled = true;
+        btn.className = 'btn-accion ocupado';
+        btn.innerHTML = '<span class="spinner-inline"></span> Abriendo...';
+        badge.textContent = '● Conectando...';
+        badge.className = 'estado-badge inactivo';
+        agregarLog('Enviando comando ON → Shelly Cloud...', 'info');
+
+        try {
+            const resp = await llamarShelly('on');
+            if (resp.isok) {
+                agregarLog('✓ Puerta ABIERTA', 'ok');
+                badge.textContent = '● Puerta Abierta';
+                badge.className = 'estado-badge activo';
+                icono.classList.add('activo');
+                feedback();
+
+                let t = SEGUNDOS;
+                timerNum.textContent = t;
+                timerWrap.classList.add('visible');
+                btn.innerHTML = `⏳ Cerrando en ${t}s...`;
+
+                interval = setInterval(async () => {
+                    t--;
+                    timerNum.textContent = t;
+                    btn.innerHTML = `⏳ Cerrando en ${t}s...`;
+                    if (t <= 0) {
+                        clearInterval(interval);
+                        timerWrap.classList.remove('visible');
+                        agregarLog('Enviando comando OFF → Shelly Cloud...', 'info');
+                        try {
+                            const resp2 = await llamarShelly('off');
+                            if (resp2.isok) {
+                                agregarLog('✓ Puerta CERRADA', 'ok');
+                            } else {
+                                agregarLog('⚠ Respuesta inesperada al cerrar', 'err');
+                            }
+                        } catch(e) {
+                            agregarLog('✗ Error al cerrar: ' + e.message, 'err');
+                        }
+                        badge.textContent = '● En espera';
+                        badge.className = 'estado-badge inactivo';
+                        icono.classList.remove('activo');
+                        btn.disabled = false;
+                        btn.className = 'btn-accion';
+                        btn.innerHTML = '🚪 Abrir Puerta';
+                        ocupado = false;
+                    }
+                }, 1000);
+            } else {
+                throw new Error(JSON.stringify(resp));
+            }
+        } catch(e) {
+            agregarLog('✗ Error: ' + e.message, 'err');
+            badge.textContent = '● Error de conexión';
+            badge.className = 'estado-badge error';
+            btn.disabled = false;
+            btn.className = 'btn-accion';
+            btn.innerHTML = '🚪 Abrir Puerta';
+            ocupado = false;
+        }
+    }
+</script>
+
+</body>
+</html>
