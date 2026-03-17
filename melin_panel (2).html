@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Melin Joyeros - Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --bg-pagina: #f0f2f5;
+            --bg-modulo: #32CD32;
+            --texto-claro: #ffffff;
+            --texto-oscuro: #1a1a1a;
+            --rojo-switch: #ef4444;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-pagina);
+            color: var(--texto-oscuro);
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* LOGIN */
+        #login-screen {
+            max-width: 360px;
+            margin: 80px auto;
+            background: #fff;
+            border-radius: 28px;
+            padding: 40px 36px;
+            text-align: center;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        }
+        #login-screen .lock { font-size: 3rem; margin-bottom: 16px; }
+        #login-screen h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; }
+        #login-screen p { font-size: 0.85rem; color: #888; margin-bottom: 24px; }
+        #pass-input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            border: 1.5px solid #ddd;
+            font-size: 1rem;
+            text-align: center;
+            letter-spacing: 4px;
+            margin-bottom: 14px;
+            outline: none;
+        }
+        #pass-input:focus { border-color: #32CD32; }
+        #btn-login {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: #32CD32;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        #btn-login:active { transform: scale(0.97); }
+        .error-msg { color: #ef4444; font-size: 0.8rem; margin-top: 10px; display: none; }
+
+        /* PANEL */
+        #main-screen { display: none; }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-top: 10px;
+        }
+        .logo-container { width: 120px; margin: 0 auto 15px; }
+        .logo-container img { width: 100%; height: auto; display: block; }
+        h1 { font-size: 1.7rem; margin: 0; font-weight: 800; color: #000; letter-spacing: -1px; }
+        .subtitle { font-size: 0.8rem; opacity: 0.6; margin-top: 5px; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .modulo-card {
+            background: var(--bg-modulo);
+            padding: 22px;
+            border-radius: 28px;
+            box-shadow: 0 12px 30px rgba(50, 205, 50, 0.2);
+            color: var(--texto-claro);
+        }
+
+        .modulo-card h2 { font-weight: 700; font-size: 1.25rem; margin: 0 0 18px 0; }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 12px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 18px;
+            position: relative;
+        }
+
+        .timer-badge {
+            background: #000;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            display: none;
+            margin-left: 10px;
+            font-weight: 700;
+        }
+        .active-timer .timer-badge { display: inline-block; }
+
+        .switch { position: relative; display: inline-block; width: 56px; height: 30px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--rojo-switch);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 24px; width: 24px; left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #000; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .spinner {
+            display: none;
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            position: absolute;
+            right: 75px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading .spinner { display: block; }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a1a;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 999;
+            pointer-events: none;
+        }
+        #toast.show { opacity: 1; }
+        #toast.ok { border-left: 4px solid #32CD32; }
+        #toast.err { border-left: 4px solid #ef4444; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <div id="login-screen">
+        <div class="lock">🔒</div>
+        <h2>Melin Joyeros</h2>
+        <p>Ingresa la contraseña para continuar</p>
+        <input type="password" id="pass-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') verificar()">
+        <button id="btn-login" onclick="verificar()">Entrar</button>
+        <p class="error-msg" id="error-msg">❌ Contraseña incorrecta</p>
+    </div>
+
+    <!-- PANEL PRINCIPAL -->
+    <div id="main-screen">
+        <div class="header">
+            <div class="logo-container">
+                <img src="logo.png" alt="Melin Joyeros" onerror="this.src='https://via.placeholder.com/150x80?text=MELIN+JOYEROS'">
+            </div>
+            <h1>Melin Joyeros</h1>
+            <p class="subtitle">Panel de Control de Seguridad</p>
+        </div>
+        <div class="dashboard-grid" id="grid"></div>
+    </div>
+
+    <div id="toast"></div>
+
+<script>
+    const PASSWORD = "volovan";
+    const SERVER   = "https://shelly-29-eu.shelly.cloud";
+    const AUTH_KEY = "N2NjYjZ1aWQ248EF3F5AB2D6D59C82574560A92572942C106E3AABA251C161B7E011FD902C25F433E0C78BEB22D";
+
+    // =============================================
+    // SUCURSALES — agrega o edita aquí
+    // =============================================
+    const sucursales = [
+        { nombre: "Mc Saturnino",   id: "e8db84ab36b5" },
+        { nombre: "Mc 626",         id: "e8db84acdc4c" },
+        { nombre: "Mc Ley Sahuaro", id: "98cdac2d5e91" },
+        { nombre: "Mc Andenes",     id: "e8db84ac4e34" },
+        { nombre: "Mc Nogales",     id: "ecda3bc09bdc" },
+        { nombre: "Mc Navojoa",     id: "30c9224c4300" },
+        { nombre: "Festiboda",      id: "a0dd6c49797c", sinNiebla: true },
+    ];
+
+    function verificar() {
+        const input = document.getElementById('pass-input').value;
+        const errorMsg = document.getElementById('error-msg');
+        if (input === PASSWORD) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+            construirPanel();
+        } else {
+            errorMsg.style.display = 'block';
+            document.getElementById('pass-input').value = '';
+            setTimeout(() => errorMsg.style.display = 'none', 2500);
+        }
+    }
+
+    let toastTimer;
+    function mostrarToast(msg, tipo) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'show ' + tipo;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.className = '', 3000);
+    }
+
+    function feedback() {
+        if ("vibrate" in navigator) navigator.vibrate(50);
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+            osc.start(); osc.stop(ctx.currentTime + 0.1);
+        } catch(e) {}
+    }
+
+    async function llamarShelly(deviceId, accion) {
+        const url = `${SERVER}/device/relay/control`;
+        const body = new URLSearchParams({
+            auth_key: AUTH_KEY,
+            id: deviceId,
+            channel: 0,
+            turn: accion
+        });
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString()
+        });
+        return await res.json();
+    }
+
+    let intervals = {};
+
+    async function accion(checkbox, suc, tipo, seg, conf) {
+        const key = `${tipo}-${suc.nombre}`;
+        const row = document.getElementById(`row-${tipo}-${suc.nombre}`);
+        const timer = document.getElementById(`timer-${tipo}-${suc.nombre}`);
+
+        if (checkbox.checked) {
+            if (conf && !confirm(`⚠️ MELIN JOYEROS:\n\n¿Estás seguro de disparar la niebla en ${suc.nombre}?`)) {
+                checkbox.checked = false;
+                return;
+            }
+
+            feedback();
+
+            if (tipo === 'n') {
+                row.classList.add('loading');
+                checkbox.disabled = true;
+                await new Promise(r => setTimeout(r, 800));
+                row.classList.remove('loading');
+                checkbox.disabled = false;
+            }
+
+            // Llamar Shelly ON
+            try {
+                const resp = await llamarShelly(suc.id, 'on');
+                if (resp.isok) {
+                    mostrarToast(`✓ ${suc.nombre} — ${tipo === 'p' ? 'Puerta abierta' : 'Niebla activada'}`, 'ok');
+                } else {
+                    mostrarToast(`✗ Error en ${suc.nombre}`, 'err');
+                    checkbox.checked = false;
+                    return;
+                }
+            } catch(e) {
+                mostrarToast(`✗ Sin conexión — ${suc.nombre}`, 'err');
+                checkbox.checked = false;
+                return;
+            }
+
+            row.classList.add('active-timer');
+            let t = seg;
+            timer.innerText = t + 's';
+
+            intervals[key] = setInterval(async () => {
+                t--;
+                timer.innerText = t + 's';
+                if (t <= 0) {
+                    clearInterval(intervals[key]);
+                    checkbox.checked = false;
+                    row.classList.remove('active-timer');
+                    try {
+                        await llamarShelly(suc.id, 'off');
+                    } catch(e) {}
+                }
+            }, 1000);
+
+        } else {
+            feedback();
+            clearInterval(intervals[key]);
+            row.classList.remove('active-timer');
+            try {
+                await llamarShelly(suc.id, 'off');
+            } catch(e) {}
+        }
+    }
+
+    function construirPanel() {
+        const grid = document.getElementById('grid');
+        sucursales.forEach(suc => {
+            const card = document.createElement('div');
+            card.className = 'modulo-card';
+            const rowId_p = `row-p-${suc.nombre}`;
+            const rowId_n = `row-n-${suc.nombre}`;
+            card.innerHTML = `
+                <h2>${suc.nombre}</h2>
+                <div class="control-row" id="${rowId_p}">
+                    <span>🚪 Abrir Puerta <span class="timer-badge" id="timer-p-${suc.nombre}">3s</span></span>
+                    <label class="switch">
+                        <input type="checkbox" onchange="accion(this, sucursales[${sucursales.indexOf(suc)}], 'p', 3, false)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                ${!suc.sinNiebla ? `
+                ${!suc.sinNiebla ? `<div class="control-row" id="${rowId_n}">
+                    <span class="spinner"></span>
+                    <span>💨 Activar Niebla <span class="timer-badge" id="timer-n-${suc.nombre}">15s</span></span>
+                    <label class="switch">
+                        <input type="checkbox" onchange="accion(this, sucursales[${sucursales.indexOf(suc)}], 'n', 15, true)">
+                        <span class="slider"></span>
+                    </label>
+                </div>` : ''}` : ''}
+            `;
+            grid.appendChild(card);
+        });
+    }
+</script>
+</body>
+</html>
